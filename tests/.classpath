@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="libs/" kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/JsonNetworkWorker"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/android.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/disklrucache-1.1.0.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/hamcrest.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/httpresponsecache.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/junit.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/maps.jar"/>
+	<classpathentry kind="lib" path="/Users/huewu/Work/JsonNetworkWorker/tests/libs/robolectric-with-dependencies.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
