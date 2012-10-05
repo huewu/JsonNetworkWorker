@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-import com.squareup.otto.Subscribe;
-
 public abstract class JsonRequest<T> {
 
 	public final static int PORT = 80;	
@@ -26,7 +24,7 @@ public abstract class JsonRequest<T> {
 	protected int status = 0;
 	
 	private ResponseDecoder<T> mDecoder;
-	private ResponseListener<T> mRespListener;
+	private ResponseListener mRespListener;
 
 	private boolean mForceUseCache = false;
 
@@ -62,16 +60,18 @@ public abstract class JsonRequest<T> {
 	}
 	
 	public void setDecoder( ResponseDecoder<T> decoder ){
+		mDecoder = decoder;
 	}
 	
-	public void setResponseListener( ResponseListener<T> listener ){
+	public void setResponseListener( ResponseListener listener ){
+		mRespListener = listener;
 	}
 	
 	public ResponseDecoder<T> getDecoder(){
 		return mDecoder;
 	}
 	
-	public ResponseListener<T> getResponseListener(){
+	public ResponseListener getResponseListener(){
 		return mRespListener;
 	}
 	

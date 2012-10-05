@@ -19,7 +19,10 @@ import android.util.Log;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.huewu.libs.network.RequestEvents.RequestFailedEvent;
+import com.huewu.libs.network.RequestEvents.RequestFinishedEvent;
 import com.huewu.libs.network.RequestEvents.RequestReadyEvent;
+import com.huewu.libs.network.RequestEvents.RequestResponsedEvent;
 import com.huewu.libs.network.RequestEvents.RequestRetryingEvent;
 import com.integralblue.httpresponsecache.HttpResponseCache;
 import com.squareup.otto.Bus;
@@ -99,15 +102,51 @@ public class JsonNetworkWorker {
 	}
 	
 	@Subscribe
-	public void handleRequest( RequestReadyEvent event ){
-		//this method is called on main thread. actual network job should be done in worker thread.
-		mWorkerPool.execute(new RequestHandler(event.getRequest()));
+	public void handleReadyRequest( RequestReadyEvent event ){
+		
+		JsonRequest<?> req = event.getRequest();
+		//Actual network job should be done in worker thread.
+		mWorkerPool.execute(new RequestHandler(req));
+		ResponseListener listener = req.getResponseListener();
+		if( listener != null )
+			listener.onRequsetReady( req );
 	}
 	
 	@Subscribe
-	public void handleRequest( RequestRetryingEvent event ){
+	public void handleRetryingRequest( RequestRetryingEvent event ){
+		
+		JsonRequest<?> req = event.getRequest();
+
 		long delay = event.getRequest().retryCount * 500;
 		mWorkerPool.schedule(new RequestHandler(event.getRequest()), delay, TimeUnit.MILLISECONDS);
+
+		ResponseListener listener = req.getResponseListener();
+		if( listener != null )
+			listener.onRequestRetrying( req );
+	}
+
+	@Subscribe
+	public void handleFinishedRequest( RequestFinishedEvent event ){
+		JsonRequest<?> req = event.getRequest();
+		ResponseListener listener = req.getResponseListener();
+		if( listener != null )
+			listener.onRequestFinished( req );
+	}
+	
+	@Subscribe
+	public void handleFailedRequest( RequestFailedEvent event ){
+		JsonRequest<?> req = event.getRequest();
+		ResponseListener listener = req.getResponseListener();
+		if( listener != null )
+			listener.onRequestFailed( req );
+	}
+	
+	@Subscribe
+	public void handleResponsedRequest( RequestResponsedEvent event ){
+		JsonRequest<?> req = event.getRequest();
+		ResponseListener listener = req.getResponseListener();
+		if( listener != null )
+			listener.onRequestResponse( req );
 	}
 	
 	protected class RequestHandler implements Runnable {
@@ -124,6 +163,9 @@ public class JsonNetworkWorker {
 				URL url = new URL( mReq.getURL().toString() );
 				HttpURLConnection conn = null;
 				conn = (HttpURLConnection) url.openConnection();
+
+				if( mReq.getData() != null )
+					conn.setDoOutput(true);
 
 				conn.setRequestMethod(mReq.getMethod().name());
 				conn.setConnectTimeout(mReq.getTimeout());

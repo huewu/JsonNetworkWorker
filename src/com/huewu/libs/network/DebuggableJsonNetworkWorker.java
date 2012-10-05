@@ -74,12 +74,12 @@ public class DebuggableJsonNetworkWorker extends JsonNetworkWorker {
 	
 	@Subscribe
 	public void handleRequest( RequestReadyEvent event ){
-		super.handleRequest(event);
+		super.handleReadyRequest(event);
 	}
 	
 	@Subscribe
 	public void handleRequest( RequestRetryingEvent event ){
-		super.handleRequest(event);
+		super.handleRetryingRequest(event);
 	}
 	
 }// end of class

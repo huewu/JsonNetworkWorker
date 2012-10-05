@@ -1,22 +1,19 @@
 package com.huewu.libs.network;
 
-import com.squareup.otto.Subscribe;
+/**
+ * @author huewu.yang
+ * JsonNetwork request is responded. 
+ */
+public interface ResponseListener {
+	
+	void onRequsetReady( JsonRequest<?> req );
+	
+	void onRequestRetrying( JsonRequest<?> req );
+	
+	void onRequestResponse( JsonRequest<?> req );
+	
+	void onRequestFinished( JsonRequest<?> req );
+	
+	void onRequestFailed( JsonRequest<?> req );
 
-public interface ResponseListener<T> {
-	
-	@Subscribe
-	void onRequsetReady( RequestEvents.RequestReadyEvent ev );
-	
-	@Subscribe
-	void onRequestRetry( RequestEvents.RequestRetryingEvent ev );
-	
-	@Subscribe
-	void onRequestResponse( RequestEvents.RequestResponsedEvent ev );
-	
-	@Subscribe
-	void onRequestFinished( RequestEvents.RequestFinishedEvent ev );
-	
-	@Subscribe
-	void onRequestFailed( RequestEvents.RequestFailedEvent ev );
-
-}// end of class
+}// end of interface
