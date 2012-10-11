@@ -146,7 +146,7 @@ public class JsonNetworkWorker {
 		JsonRequest<?> req = event.getRequest();
 		ResponseListener listener = req.getResponseListener();
 		if( listener != null )
-			listener.onRequestResponse( req );
+			listener.onRequestResponse( req, event.getResponseObject() );
 	}
 	
 	protected class RequestHandler implements Runnable {

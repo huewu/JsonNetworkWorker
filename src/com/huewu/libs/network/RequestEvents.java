@@ -1,5 +1,7 @@
 package com.huewu.libs.network;
 
+import java.util.ArrayList;
+
 public class RequestEvents {
 	
 	public static abstract class RequestEvent {
@@ -29,10 +31,18 @@ public class RequestEvents {
 		}
 	}
 	
-	public static class RequestResponsedEvent extends RequestEvent{
+	public static class RequestResponsedEvent<T> extends RequestEvent{
 
 		public RequestResponsedEvent(JsonRequest<?> req) {
 			super(req);
+		}
+		
+		@SuppressWarnings("unchecked")
+		public T getResponseObject(){
+			ArrayList<?> respList = getRequest().getResponse();
+			if( respList == null || respList.size() == 0 )
+				return null;
+			return (T) respList.get(respList.size() - 1);
 		}
 	}
 	
