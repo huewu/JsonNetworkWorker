@@ -9,10 +9,19 @@ import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 
 import android.content.Context;
 import android.util.Log;
@@ -68,6 +77,43 @@ public class JsonNetworkWorker {
 		mEventBus = new Bus(ThreadEnforcer.ANY);
 		mEventBus.register(this);
 	}
+	
+	/**
+	 * set empty ssl.
+	 */
+	public void initEmptySSL(){
+		try {
+			HttpsURLConnection
+			.setDefaultHostnameVerifier(new HostnameVerifier() {
+				@Override
+				public boolean verify(String hostname,
+						SSLSession session) {
+					return true;
+				}
+			});
+			SSLContext context = SSLContext.getInstance("TLS");
+			context.init(null,
+					new X509TrustManager[] { new X509TrustManager() {
+						public void checkClientTrusted(
+								X509Certificate[] chain, String authType)
+										throws CertificateException {
+						}
+
+						public void checkServerTrusted(
+								X509Certificate[] chain, String authType)
+										throws CertificateException {
+						}
+
+						public X509Certificate[] getAcceptedIssuers() {
+							return new X509Certificate[0];
+						}
+					} }, new SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(context
+					.getSocketFactory());
+		} catch (Exception e) { // should never happen
+			e.printStackTrace();
+		}
+	}	
 
 	private boolean mUseCache = false;
 	/**
