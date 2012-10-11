@@ -184,7 +184,7 @@ public class JsonNetworkWorker {
 		JsonRequest<?> req = event.getRequest();
 		ResponseListener listener = req.getResponseListener();
 		if( listener != null )
-			listener.onRequestFailed( req );
+			listener.onRequestFailed( req, event.getException() );
 	}
 	
 	@Subscribe

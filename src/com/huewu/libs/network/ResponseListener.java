@@ -14,6 +14,6 @@ public interface ResponseListener<T> {
 	
 	void onRequestFinished( JsonRequest<?> req );
 	
-	void onRequestFailed( JsonRequest<?> req );
+	void onRequestFailed( JsonRequest<?> req, Exception e );
 
 }// end of interface

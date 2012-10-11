@@ -60,6 +60,10 @@ public class RequestEvents {
 			req.exception = exception;
 			req.retryCount = req.maxRetryCount;
 		}
+
+		public Exception getException() {
+			return getRequest().exception;
+		}
 	}
 	
 	private RequestEvents(){}
