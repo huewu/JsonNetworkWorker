@@ -151,9 +151,10 @@ public class JsonNetworkWorker {
 	public void handleReadyRequest( RequestReadyEvent event ){
 		
 		JsonRequest<?> req = event.getRequest();
+		mLastRequest = req;
 		//Actual network job should be done in worker thread.
 		mWorkerPool.execute(new RequestHandler(req));
-		ResponseListener listener = req.getResponseListener();
+		ResponseListener<?> listener = req.getResponseListener();
 		if( listener != null )
 			listener.onRequsetReady( req );
 	}
@@ -166,7 +167,7 @@ public class JsonNetworkWorker {
 		long delay = event.getRequest().retryCount * 500;
 		mWorkerPool.schedule(new RequestHandler(event.getRequest()), delay, TimeUnit.MILLISECONDS);
 
-		ResponseListener listener = req.getResponseListener();
+		ResponseListener<?> listener = req.getResponseListener();
 		if( listener != null )
 			listener.onRequestRetrying( req );
 	}
@@ -174,7 +175,7 @@ public class JsonNetworkWorker {
 	@Subscribe
 	public void handleFinishedRequest( RequestFinishedEvent event ){
 		JsonRequest<?> req = event.getRequest();
-		ResponseListener listener = req.getResponseListener();
+		ResponseListener<?> listener = req.getResponseListener();
 		if( listener != null )
 			listener.onRequestFinished( req );
 	}
@@ -182,11 +183,12 @@ public class JsonNetworkWorker {
 	@Subscribe
 	public void handleFailedRequest( RequestFailedEvent event ){
 		JsonRequest<?> req = event.getRequest();
-		ResponseListener listener = req.getResponseListener();
+		ResponseListener<?> listener = req.getResponseListener();
 		if( listener != null )
 			listener.onRequestFailed( req, event.getException() );
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Subscribe
 	public void handleResponsedRequest( RequestResponsedEvent event ){
 		JsonRequest<?> req = event.getRequest();
@@ -286,6 +288,7 @@ public class JsonNetworkWorker {
 			}
 		}
 
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		private void handleObj(ResponseDecoder<?> decoder, JsonReader reader) {
 			Object obj = decoder.decode(reader);
 			if(obj != null)
