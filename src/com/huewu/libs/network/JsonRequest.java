@@ -1,10 +1,14 @@
 package com.huewu.libs.network;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 public abstract class JsonRequest<T> {
 
@@ -17,14 +21,14 @@ public abstract class JsonRequest<T> {
 	
 	protected ArrayList<T> response = new ArrayList<T>(5);
 	protected Exception exception = null;
-	protected byte[] data = null;
 	protected boolean useSecure = false;
 	protected int retryCount = 0;
 	protected int maxRetryCount = RETRY_COUNT;
 	protected int status = 0;
 	
 	private ResponseDecoder<T> mDecoder;
-	private ResponseListener mRespListener;
+	private ResponseListener<?> mRespListener;
+	private LinkedHashMap<String, String> mFormData = new LinkedHashMap<String, String>();
 
 	private boolean mForceUseCache = false;
 
@@ -46,6 +50,10 @@ public abstract class JsonRequest<T> {
 			this.url = null;
 		}
 	}
+	
+	public void putFormData( String key, String value ){
+		mFormData.put(key, value);
+	}
 
 	public URL getURL() {
 		return url;
@@ -55,8 +63,28 @@ public abstract class JsonRequest<T> {
 		return method;
 	}
 	
-	public byte[] getData() {
-		return data;
+	public byte[] getFormData() {
+		//convert form data to byte array.
+		if(mFormData.size() == 0)
+			return null;
+		
+		StringBuilder builder = new StringBuilder();
+		for( Entry<String, String> pair : mFormData.entrySet() ){
+			if(pair.getKey() == null || pair.getValue() == null)
+				continue;
+			
+			if(builder.length() > 0)
+				builder.append("&");
+
+			builder.append(pair.getKey());
+			builder.append("=");
+			try {
+				builder.append(URLEncoder.encode(pair.getValue(), "utf-8"));
+			} catch (UnsupportedEncodingException e) {
+				builder.append(pair.getValue());
+			}
+		}
+		return builder.toString().getBytes();
 	}
 	
 	public void setDecoder( ResponseDecoder<T> decoder ){

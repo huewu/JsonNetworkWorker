@@ -212,7 +212,7 @@ public class JsonNetworkWorker {
 				HttpURLConnection conn = null;
 				conn = (HttpURLConnection) url.openConnection();
 
-				if( mReq.getData() != null )
+				if( mReq.getFormData() != null )
 					conn.setDoOutput(true);
 
 				conn.setRequestMethod(mReq.getMethod().name());
@@ -230,17 +230,17 @@ public class JsonNetworkWorker {
 				}
 
 				OutputStream os;
-				if( mReq.data != null ){
+				byte[] data = mReq.getFormData();
+				if( data != null ){
 					conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 					os = conn.getOutputStream();
-					os.write(mReq.data);
+					os.write(data);
 					os.close();
 				}
 
 				//convert stream to json. before that we should know the gson type.
-				InputStream is = getContent( conn );
-
 				mReq.setResponseCode(conn.getResponseCode());
+				InputStream is = getContent( conn );
 				
 				ResponseDecoder<?> decoder = mReq.getDecoder();
 				if( decoder != null && is != null ) {
@@ -306,10 +306,10 @@ public class JsonNetworkWorker {
 		switch(code)
 		{
 		case -1:
+		case 400:	//invalid request.
 			return conn.getInputStream();
 		case 502:	//gateway timeout
 		case 504:	//bad gateway
-		case 400:	//invalid request.
 			return conn.getErrorStream();
 		default:
 			return conn.getInputStream();

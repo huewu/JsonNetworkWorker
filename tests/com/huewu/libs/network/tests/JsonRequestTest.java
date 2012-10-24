@@ -41,6 +41,18 @@ public class JsonRequestTest {
 	}
 	
 	@Test
+	public void testFormData(){
+		mReq.putFormData("aaa", "1234");
+		mReq.putFormData("bbb", "3456");
+		
+		byte[] data = mReq.getFormData();
+		
+		String shouldStr = "aaa=1234&bbb=3456";
+		
+		assertArrayEquals(shouldStr.getBytes(), data);
+	}
+	
+	@Test
 	public void testResponseCode(){
 		int respCode = -100;
 		mReq.setResponseCode(respCode);

@@ -17,7 +17,7 @@ public class MockFactory {
 	public static <T> JsonRequest<T> createMockJsonRequest(Method method, URL url, final String dataStr){
 		JsonRequest<T> req = new JsonRequest<T>(method, url){
 			@Override
-			public byte[] getData() {
+			public byte[] getFormData() {
 				return dataStr.getBytes();
 			}
 		};
