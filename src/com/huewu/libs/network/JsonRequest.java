@@ -52,7 +52,8 @@ public abstract class JsonRequest<T> {
 	}
 	
 	public void putFormData( String key, String value ){
-		mFormData.put(key, value);
+		if( key != null && value != null)
+			mFormData.put(key, value);
 	}
 
 	public URL getURL() {
@@ -66,7 +67,7 @@ public abstract class JsonRequest<T> {
 	public byte[] getFormData() {
 		//convert form data to byte array.
 		if(mFormData.size() == 0)
-			return null;
+			return new byte[]{};
 		
 		StringBuilder builder = new StringBuilder();
 		for( Entry<String, String> pair : mFormData.entrySet() ){
