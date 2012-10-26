@@ -48,8 +48,7 @@ public class JsonRequestTest {
 
 		byte[] data = mReq.getFormData();
 
-		String shouldStr = "";
-		assertArrayEquals(shouldStr.getBytes(), data);
+		assertArrayEquals(null, data);
 	}
 
 	@Test

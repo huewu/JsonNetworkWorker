@@ -67,7 +67,7 @@ public abstract class JsonRequest<T> {
 	public byte[] getFormData() {
 		//convert form data to byte array.
 		if(mFormData.size() == 0)
-			return new byte[]{};
+			return null;
 		
 		StringBuilder builder = new StringBuilder();
 		for( Entry<String, String> pair : mFormData.entrySet() ){
