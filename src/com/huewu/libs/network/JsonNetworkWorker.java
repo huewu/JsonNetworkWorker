@@ -55,11 +55,14 @@ public class JsonNetworkWorker {
 	protected static final int REQUEST_FINISHED = 103;
 
 	protected boolean mCacheInstalled = false; //every request is sent after this flag is set true.
+	protected boolean mUseEmptySSLVerifier = false;
 	protected ScheduledExecutorService mWorkerPool = null; 
 
 	//for debuggable.
 	protected JsonRequest<?> mLastRequest;	//for debuggable purpose only.
 	protected Bus mEventBus = null;	//for debuggable purpose only.
+
+	private HostnameVerifier mHostnameVerifier;
 
 	/**
 	 * constructor.
@@ -84,6 +87,8 @@ public class JsonNetworkWorker {
 	 */
 	public void initEmptySSL(){
 
+		mUseEmptySSLVerifier = true;
+		
 		TrustManager[] trustAllCerts = new TrustManager[]{
 				new X509TrustManager() {
 					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -105,6 +110,13 @@ public class JsonNetworkWorker {
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 		} catch (Exception e) {
 		}
+		
+		mHostnameVerifier = new HostnameVerifier() {
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		};		
 	}	
 
 	private boolean mUseCache = false;
@@ -205,6 +217,9 @@ public class JsonNetworkWorker {
 				URL url = new URL( mReq.getURL().toString() );
 				HttpURLConnection conn = null;
 				conn = (HttpURLConnection) url.openConnection();
+				
+				if( conn instanceof HttpsURLConnection && mUseEmptySSLVerifier)
+					((HttpsURLConnection) conn).setHostnameVerifier(mHostnameVerifier);
 
 				if( mReq.getFormData() != null )
 					conn.setDoOutput(true);
