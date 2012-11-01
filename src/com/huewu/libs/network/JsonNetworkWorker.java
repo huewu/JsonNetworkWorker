@@ -21,6 +21,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import android.content.Context;
@@ -55,7 +56,7 @@ public class JsonNetworkWorker {
 
 	protected boolean mCacheInstalled = false; //every request is sent after this flag is set true.
 	protected ScheduledExecutorService mWorkerPool = null; 
-	
+
 	//for debuggable.
 	protected JsonRequest<?> mLastRequest;	//for debuggable purpose only.
 	protected Bus mEventBus = null;	//for debuggable purpose only.
@@ -77,41 +78,32 @@ public class JsonNetworkWorker {
 		mEventBus = new Bus(ThreadEnforcer.ANY);
 		mEventBus.register(this);
 	}
-	
+
 	/**
 	 * set empty ssl.
 	 */
 	public void initEmptySSL(){
-		try {
-			HttpsURLConnection
-			.setDefaultHostnameVerifier(new HostnameVerifier() {
-				@Override
-				public boolean verify(String hostname,
-						SSLSession session) {
-					return true;
+
+		TrustManager[] trustAllCerts = new TrustManager[]{
+				new X509TrustManager() {
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+						return null;
+					}
+					public void checkClientTrusted(
+							java.security.cert.X509Certificate[] certs, String authType) {
+					}
+					public void checkServerTrusted(
+							java.security.cert.X509Certificate[] certs, String authType) {
+					}
 				}
-			});
-			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(null,
-					new X509TrustManager[] { new X509TrustManager() {
-						public void checkClientTrusted(
-								X509Certificate[] chain, String authType)
-										throws CertificateException {
-						}
+		};
 
-						public void checkServerTrusted(
-								X509Certificate[] chain, String authType)
-										throws CertificateException {
-						}
-
-						public X509Certificate[] getAcceptedIssuers() {
-							return new X509Certificate[0];
-						}
-					} }, new SecureRandom());
-			HttpsURLConnection.setDefaultSSLSocketFactory(context
-					.getSocketFactory());
-		} catch (Exception e) { // should never happen
-			e.printStackTrace();
+		// Install the all-trusting trust manager
+		try {
+			SSLContext sc = SSLContext.getInstance("TLS");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (Exception e) {
 		}
 	}	
 
@@ -143,13 +135,13 @@ public class JsonNetworkWorker {
 	public void sendRequest(JsonRequest<?> req) {
 		if (req == null)
 			return;
-		
+
 		mEventBus.post(new RequestReadyEvent(req));
 	}
-	
+
 	@Subscribe
 	public void handleReadyRequest( RequestReadyEvent event ){
-		
+
 		JsonRequest<?> req = event.getRequest();
 		mLastRequest = req;
 		//Actual network job should be done in worker thread.
@@ -158,10 +150,10 @@ public class JsonNetworkWorker {
 		if( listener != null )
 			listener.onRequsetReady( req );
 	}
-	
+
 	@Subscribe
 	public void handleRetryingRequest( RequestRetryingEvent event ){
-		
+
 		JsonRequest<?> req = event.getRequest();
 
 		long delay = event.getRequest().retryCount * 500;
@@ -179,7 +171,7 @@ public class JsonNetworkWorker {
 		if( listener != null )
 			listener.onRequestFinished( req );
 	}
-	
+
 	@Subscribe
 	public void handleFailedRequest( RequestFailedEvent event ){
 		JsonRequest<?> req = event.getRequest();
@@ -187,16 +179,18 @@ public class JsonNetworkWorker {
 		if( listener != null )
 			listener.onRequestFailed( req, event.getException() );
 	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+
+	@SuppressWarnings("unchecked")
 	@Subscribe
 	public void handleResponsedRequest( RequestResponsedEvent event ){
 		JsonRequest<?> req = event.getRequest();
+
+		@SuppressWarnings("rawtypes")
 		ResponseListener listener = req.getResponseListener();
 		if( listener != null )
 			listener.onRequestResponse( req, event.getResponseObject() );
 	}
-	
+
 	protected class RequestHandler implements Runnable {
 
 		private JsonRequest<?> mReq;
@@ -217,7 +211,6 @@ public class JsonNetworkWorker {
 
 				conn.setRequestMethod(mReq.getMethod().name());
 				conn.setConnectTimeout(mReq.getTimeout());
-				conn.setReadTimeout(mReq.getTimeout());
 				conn.setDefaultUseCaches(mUseCache);
 
 				if( mReq.useForceCache() ){
@@ -241,7 +234,7 @@ public class JsonNetworkWorker {
 				//convert stream to json. before that we should know the gson type.
 				mReq.setResponseCode(conn.getResponseCode());
 				InputStream is = getContent( conn );
-				
+
 				ResponseDecoder<?> decoder = mReq.getDecoder();
 				if( decoder != null && is != null ) {
 
@@ -277,7 +270,7 @@ public class JsonNetworkWorker {
 				mEventBus.post(new RequestEvents.RequestFailedEvent(mReq, e));
 			}
 		}//end of run.
-		
+
 		private void handleRetry( Exception e ) {
 			if(mReq.retryCount <= mReq.maxRetryCount){
 				Log.v(TAG, "Retry Request:" + mReq.getURL().toString() + ":" + e);
@@ -288,12 +281,11 @@ public class JsonNetworkWorker {
 			}
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
 		private void handleObj(ResponseDecoder<?> decoder, JsonReader reader) {
 			Object obj = decoder.decode(reader);
 			if(obj != null)
 				mReq.addResponse( obj );
-			
+
 			mEventBus.post(new RequestEvents.RequestResponsedEvent(mReq));
 		}
 	}
@@ -307,7 +299,6 @@ public class JsonNetworkWorker {
 		{
 		case -1:
 		case 400:	//invalid request.
-			return conn.getInputStream();
 		case 502:	//gateway timeout
 		case 504:	//bad gateway
 			return conn.getErrorStream();

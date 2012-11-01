@@ -1,5 +1,6 @@
 package com.huewu.libs.network;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class RequestEvents {
@@ -31,14 +32,14 @@ public class RequestEvents {
 		}
 	}
 	
-	public static class RequestResponsedEvent<T> extends RequestEvent{
+	public static class RequestResponsedEvent extends RequestEvent{
 
 		public RequestResponsedEvent(JsonRequest<?> req) {
 			super(req);
 		}
 		
 		@SuppressWarnings("unchecked")
-		public T getResponseObject(){
+		public <T> T getResponseObject(){
 			ArrayList<?> respList = getRequest().getResponse();
 			if( respList == null || respList.size() == 0 )
 				return null;

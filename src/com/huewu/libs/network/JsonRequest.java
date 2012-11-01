@@ -92,7 +92,7 @@ public abstract class JsonRequest<T> {
 		mDecoder = decoder;
 	}
 	
-	public void setResponseListener( ResponseListener listener ){
+	public void setResponseListener( ResponseListener<?> listener ){
 		mRespListener = listener;
 	}
 	
@@ -100,7 +100,7 @@ public abstract class JsonRequest<T> {
 		return mDecoder;
 	}
 	
-	public ResponseListener getResponseListener(){
+	public ResponseListener<?> getResponseListener(){
 		return mRespListener;
 	}
 	
@@ -129,6 +129,7 @@ public abstract class JsonRequest<T> {
 		status = code;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addResponse( Object obj ){
 		response.add((T) obj);
 	}
