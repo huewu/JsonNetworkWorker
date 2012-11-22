@@ -9,9 +9,6 @@ import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,7 +21,10 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.TrafficStats;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.stream.JsonReader;
@@ -125,7 +125,7 @@ public class JsonNetworkWorker {
 	 * it takes some time to install disk cache.
 	 * @param flag
 	 */
-	public void setEnableCache( Context context, boolean flag ){
+	public void setEnableCache( Context context, long cacheSize, boolean flag ){
 		if(mUseCache == flag)
 			return;	//do nothing.
 
@@ -136,8 +136,7 @@ public class JsonNetworkWorker {
 			// set http cache.
 			try {
 				File httpCacheDir = new File(cache_dir, "http");
-				long httpCacheSize = 10 * 1024 * 1024; // 10 MiB
-				HttpResponseCache.install(httpCacheDir, httpCacheSize);
+				HttpResponseCache.install(httpCacheDir, cacheSize);
 			} catch (IOException e) {
 				Log.d(TAG, "Fail to install a cache");
 			}
@@ -210,10 +209,15 @@ public class JsonNetworkWorker {
 			mReq = req;
 		}
 
+		@TargetApi(14)
 		@Override
 		public void run() {
 			// do http request.
+			
 			try {
+				if(Build.VERSION.SDK_INT > Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+					TrafficStats.setThreadStatsTag(0xF00D);
+
 				URL url = new URL( mReq.getURL().toString() );
 				HttpURLConnection conn = null;
 				conn = (HttpURLConnection) url.openConnection();
@@ -283,6 +287,9 @@ public class JsonNetworkWorker {
 			} catch (Exception e) {
 				Log.w(TAG, "UnknownException:" + mReq.getURL().toString() +":" + e);
 				mEventBus.post(new RequestEvents.RequestFailedEvent(mReq, e));
+			} finally {
+				if(Build.VERSION.SDK_INT > Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+				  TrafficStats.clearThreadStatsTag();
 			}
 		}//end of run.
 
